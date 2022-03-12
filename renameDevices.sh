@@ -7,7 +7,16 @@ jssURL=
 jssUser=
 jssPassword=
 
-deviceNumbers=($(/usr/bin/curl -X GET -H "Accept: application/xml" -s -u "${jssUser}":"${jssPassword}" ${jssURL}/JSSResource/advancedmobiledevicesearches/id/116 | /usr/bin/xpath "//id" 2> /dev/null | awk -F'</?id>' '{for(i=2;i<=NF;i++) print $i}'))
+xpath() {
+    # the xpath tool changes in Big Sur 
+    if [[ $(sw_vers -buildVersion) > "20A" ]]; then
+        /usr/bin/xpath -e "$@"
+    else
+        /usr/bin/xpath "$@"
+    fi
+}
+
+deviceNumbers=($(/usr/bin/curl -X GET -H "Accept: application/xml" -s -u "${jssUser}":"${jssPassword}" ${jssURL}/JSSResource/advancedmobiledevicesearches/id/116 | xpath "//id" 2> /dev/null | awk -F'</?id>' '{for(i=2;i<=NF;i++) print $i}'))
 
 correctDeviceName(){
 timeOut=$(curl -X POST -H "Accept: application/xml" -s -u ${jssUser}:${jssPassword} "${jssURL%/}"/JSSResource/mobiledevicecommands/command/DeviceName/"$desiredName"/id/$device | grep -c "Timeout")
